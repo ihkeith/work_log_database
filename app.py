@@ -17,7 +17,7 @@ db = SqliteDatabase('work_log.db')
 class Log(Model):
      employee_name = CharField(max_length=255)
      task_title = CharField(max_length=255)
-     date = DateTimeField(default=datetime.datetime.now())
+     date = DateTimeField(default=datetime.datetime.now)
      time_spent = DateTimeField()  # fill in time spent in minutes
      general_notes = TextField()
 
@@ -38,7 +38,8 @@ def initialize():
 
 def add_entry():
     """Allows a user to add a work log entry"""
-    # allow a user to create an entry
+    print("Log Entry Form")
+
     pass
 
 
