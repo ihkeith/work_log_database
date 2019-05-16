@@ -77,19 +77,66 @@ def remove_log(entry):
         print("Entry deleted!")
 
 
-def view_logs(start_date=None, end_date=None):
+def find_logs(
+    start_date=None,
+    end_date=None,
+    search_by_term=None,
+    name=None,
+    spent=None
+    ):
     """View all logs"""
-    # list all for particular employee
-    # list all for a date or search
-    # list all for date range
-    # list all people if they share a name and allow user to choose
-    # display entries one at a time with the ability to page through (previous/next/back)
     logs = Log.select().order_by(Log.date.desc())
 
     if start_date and end_date:
         logs = Log.select().order_by(Log.date)
         logs = logs.where(Log.date.between(start_date, end_date))
+    if search_by_term:
+        logs = logs.where(
+            Log.task_title.contains(search_by_term) |
+            Log.general_notes.contains(search_by_term))
+    if name:
+        logs = logs.where(Log.employee_name.contains(name))
+    if spent:
+        logs = logs.where(Log.time_spent.contains(spent))
 
+    print_entry(logs)
+
+
+def search_by_name():
+    """Search for logs by employee name"""
+    logs = Log.select().order_by(Log.date.desc())
+    search_name = input("Enter Employee Name: ").lower()
+    logs = logs.where(Log.employee_name.contains(search_name))
+    name_list = set([log.employee_name for log in logs])
+    for key, value in enumerate(name_list, start=1):
+        sub_menu.update({key:value})
+    print("Matches:\n")
+    for key, value in sub_menu.items(): print(key, value)
+    name = int(input("\nEnter the number for the correct name.  "))
+    find_logs(start_date=None, end_date=None, search_by_term=None, name=sub_menu[name])
+
+
+def search_by_date():
+    """Search for logs by date range: MM/DD/YYYY"""
+    start_date = datetime.datetime.strptime(input("Enter Start Date MM/DD/YYYY: "), "%m/%d/%Y")
+    end_date = datetime.datetime.strptime(input("Enter End Date MM/DD/YYYY: "), "%m/%d/%Y")
+    find_logs(start_date, end_date)
+
+
+def search_by_term():
+    """Search Title and Notes for term"""
+    find_logs(start_date=None, end_date=None, search_by_term=input("Enter Term:  "))
+
+
+def search_by_time_spent():
+    """Search logs by time spent"""
+    tspent = int(input("Enter amount of time spent:  "))
+    find_logs(start_date=None, end_date=None, search_by_term=None, spent=tspent)
+
+def print_entry(logs):
+    """Print the entries to the screen in a readable format"""
+    # print a report to the screen
+    # include date, title_of_task, time spent, employee, and general notes
     for log in logs:
         clear_screen()
         date = log.date.strftime('%A %B %d, %Y %I:%M%p')
@@ -112,64 +159,17 @@ def view_logs(start_date=None, end_date=None):
             remove_log(log)
 
 
-def search_by_name():
-    """Search for logs by employee name"""
-    # view_logs(input("Enter Employee Name: ").lower())
-    logs = Log.select().order_by(Log.date.desc())
-    search_name = input("Enter Employee Name: ").lower()
-    logs = logs.where(Log.employee_name.contains(search_name))
-    print("Matches:\n")
-    for log in logs:
-        print(log.employee_name)
-    input("\nPress enter to return to menu.")
-
-
-def search_by_date():
-    """Search for logs by date range: MM/DD/YYYY"""
-    # logs = Log.select().order_by(Log.date.desc())
-    start_date = datetime.datetime.strptime(input("Enter Start Date MM/DD/YY: "), "%m/%d/%Y")
-    end_date = datetime.datetime.strptime(input("Enter End Date MM/DD/YY: "), "%m/%d/%Y")
-    view_logs(start_date, end_date)
-    # logs = logs.where(Log.date >= start_date & Log.date <= end_date)
-    # for log in logs:
-    #     clear_screen()
-    #     date = log.date.strftime('%A %B %d, %Y %I:%M%p')
-    #     print("=" * len(date))
-    #     print(date)
-    #     print("Name: {}".format(log.employee_name))
-    #     print("Task Title: {}".format(log.task_title))
-    #     print("Minutes Worked: {}".format(log.time_spent))
-    #     print("Notes: {}".format(log.general_notes))
-    #     print('=' * len(date))
-    #     print()
-    #     print("N) for next log entry")
-    #     print("d) to delete log entry")
-    #     print('q) return to main menu')
-
-    #     next_action = input('\nAction: [Ndq]  ').lower().strip()
-    #     if next_action == 'q':
-    #         break
-    #     elif next_action == 'd':
-    #         remove_log(log)
-
-
-def print_entry():
-    """Print the entries to the screen in a readable format"""
-    # print a report to the screen
-    # include date, title_of_task, time spent, employee, and general notes
-    pass
-
-
 menu = OrderedDict([
     ("1", add_log),
-    ("2", view_logs),
+    ("2", find_logs),
     ("3", search_by_name),
-    ("4", search_by_date)
+    ("4", search_by_date),
+    ("5", search_by_term),
+    ("6", search_by_time_spent),
 ])
 
 sub_menu = OrderedDict([
-    ("e", edit_log),
-    ("d", remove_log),
+
 ])
 
 
