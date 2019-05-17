@@ -8,6 +8,7 @@ Created: 05/15/2019
 from collections import OrderedDict
 import datetime
 import os
+import re
 import sys
 
 from peewee import *
@@ -37,15 +38,24 @@ def initialize():
 
 
 def add_log():
-    """Allows a user to add a work log entry"""
+    """Create a new log entry"""
     print("Log Entry Form")
 
     save = 'n'
-    name = input("What is your name? ")
-    title = input("What is the Task Title?  ")
     while save == 'n':
         try:
+            name = input("What is your name? ")
+            if not name:
+                print("Please enter your name")
+                continue
+            title = input("What is the Task Title?  ")
+            if not title:
+                print("Pleae enter a Title")
+                continue
             spent_time = int(input("How much time did it take? Enter minutes in numbers only\n>>  "))
+            if not spent_time:
+                print('Please enter time spent')
+                continue
             print("Add your notes here. Press ctl+D when done.")
             notes = sys.stdin.read().strip()
             save = input("Would you like to save this log? Y/n  ")
@@ -78,6 +88,7 @@ def remove_log(entry):
 
 
 def find_logs(
+    search_date=None,
     start_date=None,
     end_date=None,
     search_by_term=None,
@@ -87,6 +98,8 @@ def find_logs(
     """View all logs"""
     logs = Log.select().order_by(Log.date.desc())
 
+    if search_date:
+        logs = logs.where(Log.date == search_date)
     if start_date and end_date:
         logs = Log.select().order_by(Log.date)
         logs = logs.where(Log.date.between(start_date, end_date))
@@ -97,30 +110,67 @@ def find_logs(
     if name:
         logs = logs.where(Log.employee_name.contains(name))
     if spent:
-        logs = logs.where(Log.time_spent.contains(spent))
+        logs = logs.where(Log.time_spent == spent)
 
-    print_entry(logs)
+    if logs:
+        print_entry(logs)
+    else:
+        print("No matches were found.")
+        input("Press enter to continue.")
 
 
-def search_by_name():
-    """Search for logs by employee name"""
+def view_all_names():
+    """Search logs by employee name"""
     logs = Log.select().order_by(Log.date.desc())
-    search_name = input("Enter Employee Name: ").lower()
-    logs = logs.where(Log.employee_name.contains(search_name))
     name_list = set([log.employee_name for log in logs])
     for key, value in enumerate(name_list, start=1):
         sub_menu.update({key:value})
+    
     print("Matches:\n")
     for key, value in sub_menu.items(): print(key, value)
     name = int(input("\nEnter the number for the correct name.  "))
+
+    search_name = input("Enter Employee Name: ").lower()
+    logs = logs.where(Log.employee_name.contains(search_name))
+    
+    
     find_logs(start_date=None, end_date=None, search_by_term=None, name=sub_menu[name])
 
 
+def search_by_name():
+    """Search by name"""
+    pass
+
+
 def search_by_date():
-    """Search for logs by date range: MM/DD/YYYY"""
-    start_date = datetime.datetime.strptime(input("Enter Start Date MM/DD/YYYY: "), "%m/%d/%Y")
-    end_date = datetime.datetime.strptime(input("Enter End Date MM/DD/YYYY: "), "%m/%d/%Y")
-    find_logs(start_date, end_date)
+    """Search for logs by date or date range"""
+    choice = None
+    print("1) Search by Date")
+    print("2) Search by Date Range")
+
+    while not choice:
+        choice = input("\nAction:  ")
+        if choice == '1':
+            try:
+                search_date = datetime.datetime.strptime(input("Enter Date MM/DD/YYYY: "), "%m/%d/%Y")
+                find_logs(search_date)
+            except ValueError:
+                print("That is not a valid date. Please try again")
+                choice = None
+                continue
+        if  choice == '2':
+            try:
+                start_date = datetime.datetime.strptime(input("Enter Start Date MM/DD/YYYY: "), "%m/%d/%Y")
+                end_date = datetime.datetime.strptime(input("Enter End Date MM/DD/YYYY: "), "%m/%d/%Y")
+                find_logs(start_date, end_date)
+            except ValueError:
+                print("That is not a valid date. Please try again")
+                choice = None
+                continue
+        else:
+            print("That is not a valid action.")
+            choice = None
+            continue
 
 
 def search_by_term():
@@ -130,8 +180,17 @@ def search_by_term():
 
 def search_by_time_spent():
     """Search logs by time spent"""
-    tspent = int(input("Enter amount of time spent:  "))
-    find_logs(start_date=None, end_date=None, search_by_term=None, spent=tspent)
+    tspent = None
+    while not tspent:
+        tspent = input("Enter amount of time spent:  ")
+        try:
+            tspent = int(tspent)
+            find_logs(start_date=None, end_date=None, search_by_term=None, spent=tspent)
+        except ValueError:
+            print("That is not a valid number.")
+            tspent = None
+            continue
+
 
 def print_entry(logs):
     """Print the entries to the screen in a readable format"""
@@ -159,18 +218,33 @@ def print_entry(logs):
             remove_log(log)
 
 
+def search_menu():
+    """Search log entries"""
+    s_menu = OrderedDict([
+    ("1", view_all_names),
+    ("2", search_by_date),
+    ("3", search_by_time_spent),
+    ("4", search_by_term),
+    ])
+    choice = None
+
+    while choice != 'q':
+        clear_screen()
+        print("Enter 'q' to quit.\n")
+        for key, value in s_menu.items():
+            print('{}) {}'.format(key, value.__doc__))
+        choice = input("\nAction:  ").lower().strip()
+        if choice in s_menu:
+            clear_screen()
+            s_menu[choice]()
+
+
 menu = OrderedDict([
     ("1", add_log),
-    ("2", find_logs),
-    ("3", search_by_name),
-    ("4", search_by_date),
-    ("5", search_by_term),
-    ("6", search_by_time_spent),
+    ("2", search_menu),
 ])
 
-sub_menu = OrderedDict([
-
-])
+sub_menu = OrderedDict([('0', search_by_name)])
 
 
 def menu_loop():
@@ -182,8 +256,8 @@ def menu_loop():
         print(("*" * 17) + "\nWork Log Database\n" + ("*" * 17) + "\n")
         print("Enter 'q' to quit.\n")
         for key, value in menu.items():
-            print('{}) {}\n'.format(key, value.__doc__))
-        choice = input("Action:  ").lower().strip()
+            print('{}) {}'.format(key, value.__doc__))
+        choice = input("\nAction:  ").lower().strip()
         if choice in menu:
             clear_screen()
             menu[choice]()
