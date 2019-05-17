@@ -74,16 +74,51 @@ def add_log():
             continue
 
 
-def edit_log():
+def edit_log(log):
     """Allows a user to edit a log entry"""
-    pass
+    print("Log Entry Form")
+
+    save = 'n'
+    while save == 'n':
+        try:
+            name = input("What is your name?  ")
+            if not name:
+                print("Please enter your name")
+                continue
+            title = input("What is the Task Title?  ")
+            if not title:
+                print("Please enter a Title")
+                continue
+            spent_time = int(input("How much time did it take? Enter minutes in numbers only.  "))
+            if not spent_time:
+                print('Please enter time spent')
+                continue
+            date = datetime.datetime.strptime(input("Please enter new date in MM/DD/YYYY 00:00PM format  "), "%m/%d/%Y %I:%M%p")
+
+            print("Add your notes here. Press ctl+D when done.")
+            notes = sys.stdin.read().strip()
+            save = input("Would you like to save this log? Y/n  ")
+
+            if save.lower().strip() == 'y':
+                log.date = date
+                log.employee_name = name
+                log.task_title = title
+                log.time_spent = spent_time
+                log.general_notes=notes
+                log.save()
+                print("Saved successfully!")
+            else:
+                save = 'not saving pal'
+        except ValueError:
+            print("Please enter minutes as a number only. Ex. 42")
+            continue
 
 
-def remove_log(entry):
+def remove_log(log):
     """Allows a user to remove a log entry"""
     if input("Are you sure?  y/N  ").lower() == 'y':
-        entry.delete_instance()
-        print("Entry deleted!")
+        log.delete_instance()
+        print("Log deleted!")
 
 
 def find_logs(
@@ -98,7 +133,7 @@ def find_logs(
     logs = Log.select().order_by(Log.date.desc())
 
     if search_date:
-        logs = logs.where(Log.date == search_date)
+        logs = logs.select().where(Log.date.contains(search_date))
     if start_date and end_date:
         logs = Log.select().order_by(Log.date)
         logs = logs.where(Log.date.between(start_date, end_date))
@@ -155,6 +190,7 @@ def view_all_names():
     """Search logs by employee name"""
     logs = Log.select().order_by(Log.date.desc())
     name_list = set([log.employee_name for log in logs])
+    sub_menu = OrderedDict([('0', "Search by name")])
     for key, value in enumerate(name_list, start=1):
         sub_menu.update({key:value})
     
@@ -196,29 +232,28 @@ def search_by_date():
         choice = input("\nAction:  ")
         if choice == '1':
             logs = Log.select().order_by(Log.date.desc())
-            log_list = set([log.date for log in logs])
+            log_list = set([log.date.strftime("%m/%d/%Y") for log in logs])
             log_dict = OrderedDict([])
             for key, value in enumerate(log_list, start=1):
                 log_dict.update({key:value})
-                print(key, value.strftime("%m/%d/%Y"))
+                print(key, value)
             
             new_choice = None
             while new_choice == None:
                 try: 
                     new_choice = input("Enter number for date to search.  ")
-                    new_choice = int(new_choice)
-                    search_date = datetime.datetime.strptime(log_dict[new_choice], "%m/%d/%Y")
-                    # find_logs(start_date=None, end_date=None, search_by_term=None, name=None)
-                    find_logs(search_date)
+                    new_choice = log_dict[int(new_choice)]
+                    choice_date = datetime.datetime.strptime(new_choice, "%m/%d/%Y")
+                    find_logs(search_date=choice_date)
                 except ValueError:
                     print("That is not a valid date. Please try again")
                     choice = None
                     continue
         elif  choice == '2':
             try:
-                start_date = datetime.datetime.strptime(input("Enter Start Date MM/DD/YYYY: "), "%m/%d/%Y")
-                end_date = datetime.datetime.strptime(input("Enter End Date MM/DD/YYYY: "), "%m/%d/%Y")
-                find_logs(start_date, end_date)
+                start_date_ = datetime.datetime.strptime(input("Enter Start Date MM/DD/YYYY: "), "%m/%d/%Y")
+                end_date_ = datetime.datetime.strptime(input("Enter End Date MM/DD/YYYY: "), "%m/%d/%Y")
+                find_logs(start_date=start_date_, end_date=end_date_)
             except ValueError:
                 print("That is not a valid date. Please try again")
                 choice = None
@@ -267,13 +302,16 @@ def print_entry(logs):
         print()
         print("N) for next log entry")
         print("d) to delete log entry")
+        print("e) to edit log entry")
         print('q) return to main menu')
 
-        next_action = input('\nAction: [Ndq]  ').lower().strip()
+        next_action = input('\nAction: [Ndeq]  ').lower().strip()
         if next_action == 'q':
             break
         elif next_action == 'd':
             remove_log(log)
+        elif next_action == 'e':
+            edit_log(log)
 
 
 def search_menu():
@@ -301,8 +339,6 @@ menu = OrderedDict([
     ("1", add_log),
     ("2", search_menu),
 ])
-
-sub_menu = OrderedDict([('0', "Search by name")])
 
 
 def menu_loop():
