@@ -8,7 +8,6 @@ Created: 05/15/2019
 from collections import OrderedDict
 import datetime
 import os
-import re
 import sys
 
 from peewee import *
@@ -116,7 +115,40 @@ def find_logs(
         print_entry(logs)
     else:
         print("No matches were found.")
-        input("Press enter to continue.")
+        input("\nPress enter to continue.")
+
+
+def search_by_name():
+    """Search by name"""
+    logs = Log.select().order_by(Log.date.desc())
+    search_name = input("Enter Employee Name: ").lower()
+    logs = logs.where(Log.employee_name.contains(search_name))
+    name_list = set([log.employee_name for log in logs])
+    name_menu = OrderedDict([])
+
+    if len(name_list) == 1:
+        find_logs(start_date=None, end_date=None, search_by_term=None, name=search_name)
+    else:
+        print("Matches:\n")
+
+        for key, value in enumerate(name_list, start=1):
+            name_menu.update({key:value})
+            print(key, value)
+        
+        choice = None
+        while choice == None:
+            try:
+                choice = input("\nEnter the number for the correct name.  ")
+                choice = int(choice)
+                find_logs(start_date=None, end_date=None, search_by_term=None, name=name_menu[choice])
+            except KeyError:
+                print("That is not a valid choice.")
+                choice = None
+                continue
+            except ValueError:
+                print("That is not a valid choice.")
+                choice = None
+                continue
 
 
 def view_all_names():
@@ -126,39 +158,63 @@ def view_all_names():
     for key, value in enumerate(name_list, start=1):
         sub_menu.update({key:value})
     
+    print("Enter 'q' to quit.\n")
     print("Matches:\n")
-    for key, value in sub_menu.items(): print(key, value)
-    name = int(input("\nEnter the number for the correct name.  "))
-
-    search_name = input("Enter Employee Name: ").lower()
-    logs = logs.where(Log.employee_name.contains(search_name))
+    for key, value in sub_menu.items():
+        print(key, value)
     
-    
-    find_logs(start_date=None, end_date=None, search_by_term=None, name=sub_menu[name])
-
-
-def search_by_name():
-    """Search by name"""
-    pass
+    choice = None
+    while choice == None:
+        try:
+            choice = input("\nEnter the number for the correct name.  ")
+            if choice.lower().strip() == 'q':
+                pass
+            elif choice == '0':
+                search_by_name()
+            else:
+                choice = int(choice)
+                try:
+                    find_logs(start_date=None, end_date=None, search_by_term=None, name=sub_menu[choice])
+                except KeyError:
+                    print("That is not a valid choice.")
+                    choice = None
+                    continue
+        except ValueError:
+            print("That is not a valid choice.")
+            choice = None
+            continue
 
 
 def search_by_date():
     """Search for logs by date or date range"""
     choice = None
+    print("Enter 'q' to quit.\n")
     print("1) Search by Date")
     print("2) Search by Date Range")
 
     while not choice:
         choice = input("\nAction:  ")
         if choice == '1':
-            try:
-                search_date = datetime.datetime.strptime(input("Enter Date MM/DD/YYYY: "), "%m/%d/%Y")
-                find_logs(search_date)
-            except ValueError:
-                print("That is not a valid date. Please try again")
-                choice = None
-                continue
-        if  choice == '2':
+            logs = Log.select().order_by(Log.date.desc())
+            log_list = set([log.date for log in logs])
+            log_dict = OrderedDict([])
+            for key, value in enumerate(log_list, start=1):
+                log_dict.update({key:value})
+                print(key, value.strftime("%m/%d/%Y"))
+            
+            new_choice = None
+            while new_choice == None:
+                try: 
+                    new_choice = input("Enter number for date to search.  ")
+                    new_choice = int(new_choice)
+                    search_date = datetime.datetime.strptime(log_dict[new_choice], "%m/%d/%Y")
+                    # find_logs(start_date=None, end_date=None, search_by_term=None, name=None)
+                    find_logs(search_date)
+                except ValueError:
+                    print("That is not a valid date. Please try again")
+                    choice = None
+                    continue
+        elif  choice == '2':
             try:
                 start_date = datetime.datetime.strptime(input("Enter Start Date MM/DD/YYYY: "), "%m/%d/%Y")
                 end_date = datetime.datetime.strptime(input("Enter End Date MM/DD/YYYY: "), "%m/%d/%Y")
@@ -167,6 +223,8 @@ def search_by_date():
                 print("That is not a valid date. Please try again")
                 choice = None
                 continue
+        elif choice.lower().strip() == 'q':
+            pass
         else:
             print("That is not a valid action.")
             choice = None
@@ -244,7 +302,7 @@ menu = OrderedDict([
     ("2", search_menu),
 ])
 
-sub_menu = OrderedDict([('0', search_by_name)])
+sub_menu = OrderedDict([('0', "Search by name")])
 
 
 def menu_loop():
