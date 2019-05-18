@@ -145,7 +145,6 @@ def find_logs(
         logs = logs.where(Log.employee_name.contains(name))
     if spent:
         logs = logs.where(Log.time_spent == spent)
-
     if logs:
         print_entry(logs)
     else:
@@ -233,16 +232,15 @@ def search_by_date():
         if choice == '1':
             logs = Log.select().order_by(Log.date.desc())
             log_list = set([log.date.strftime("%m/%d/%Y") for log in logs])
-            log_dict = OrderedDict([])
-            for key, value in enumerate(log_list, start=1):
-                log_dict.update({key:value})
-                print(key, value)
+            log_choices = [log for log in log_list]
+            for key, value in enumerate(log_choices, start=1):
+                print("{}) {}".format(key, value))
             
             new_choice = None
             while new_choice == None:
                 try: 
                     new_choice = input("Enter number for date to search.  ")
-                    new_choice = log_dict[int(new_choice)]
+                    new_choice = log_choices[int(new_choice) - 1]
                     choice_date = datetime.datetime.strptime(new_choice, "%m/%d/%Y")
                     find_logs(search_date=choice_date.date())
                 except ValueError:
@@ -287,30 +285,46 @@ def search_by_time_spent():
 
 def print_entry(logs):
     """Print the entries to the screen in a readable format"""
-    for log in logs:
-        clear_screen()
-        date = log.date.strftime('%A %B %d, %Y %I:%M%p')
-        print("=" * len(date))
-        print(date)
-        print("Name: {}".format(log.employee_name))
-        print("Task Title: {}".format(log.task_title))
-        print("Minutes Worked: {}".format(log.time_spent))
-        print("Notes: {}".format(log.general_notes))
-        print('=' * len(date))
-        print()
-        print("N) for next log entry")
-        print("p) for previous log entry")
-        print("d) to delete log entry")
-        print("e) to edit log entry")
-        print('q) return to main menu')
+    log_list = [log for log in logs]
+    index = 0
+    while True:
+        try:
+            actions = [
+        "N) for next log entry",
+        "p) for previous log entry",
+        "d) to delete log entry",
+        "e) to edit log entry"
+        'q) return to main menu'
+    ]
+            clear_screen()
+            if index == 0:
+                actions.remove("p) for previous log entry")
+            date = log_list[index].date.strftime('%A %B %d, %Y %I:%M%p')
+            print("=" * len(date))
+            print(date)
+            print("Name: {}".format(log_list[index].employee_name))
+            print("Task Title: {}".format(log_list[index].task_title))
+            print("Minutes Worked: {}".format(log_list[index].time_spent))
+            print("Notes: {}".format(log_list[index].general_notes))
+            print('=' * len(date))
+            print()
+            for action in actions:
+                print(action)
 
-        next_action = input('\nAction: [Ndeq]  ').lower().strip()
-        if next_action == 'q':
-            break
-        elif next_action == 'd':
-            remove_log(log)
-        elif next_action == 'e':
-            edit_log(log)
+            next_action = input('\nAction:  ').lower().strip()
+            if next_action == 'q':
+                break
+            elif next_action == 'd':
+                remove_log(log_list[index])
+            elif next_action == 'e':
+                edit_log(log_list[index])
+            elif next_action == 'p' and index != 0:
+                index -= 1
+                continue
+            else:
+                index += 1
+        except IndexError:
+            return False
 
 
 def search_menu():
