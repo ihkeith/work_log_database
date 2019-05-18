@@ -132,9 +132,6 @@ def find_logs(
     """View all logs"""
     logs = Log.select().order_by(Log.date.desc())
 
-    print(search_date)
-    input('enter')
-
     if search_date:
         logs = logs.where(Log.date.contains(search_date))
     if start_date and end_date:
