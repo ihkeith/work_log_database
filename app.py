@@ -293,8 +293,8 @@ def print_entry(logs):
         "N) for next log entry",
         "p) for previous log entry",
         "d) to delete log entry",
-        "e) to edit log entry"
-        'q) return to main menu'
+        "e) to edit log entry",
+        'q) return to main menu',
     ]
             clear_screen()
             if index == 0:
