@@ -359,15 +359,19 @@ def menu_loop():
     choice = None
 
     while choice != 'q':
-        clear_screen()
-        print(("*" * 17) + "\nWork Log Database\n" + ("*" * 17) + "\n")
-        print("Enter 'q' to quit.\n")
-        for key, value in menu.items():
-            print('{}) {}'.format(key, value.__doc__))
-        choice = input("\nAction:  ").lower().strip()
-        if choice in menu:
+        try:
             clear_screen()
-            menu[choice]()
+            print(("*" * 17) + "\nWork Log Database\n" + ("*" * 17) + "\n")
+            print("Enter 'q' to quit.\n")
+            for key, value in menu.items():
+                print('{}) {}'.format(key, value.__doc__))
+            choice = input("\nAction:  ").lower().strip()
+            if choice in menu:
+                clear_screen()
+                menu[choice]()
+        except KeyboardInterrupt:
+            print("\nNice try, but you can't quit that way!")
+            input("Press enter to continue")
 
 
 if __name__ == '__main__':
