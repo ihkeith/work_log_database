@@ -132,8 +132,11 @@ def find_logs(
     """View all logs"""
     logs = Log.select().order_by(Log.date.desc())
 
+    print(search_date)
+    input('enter')
+
     if search_date:
-        logs = logs.select().where(Log.date.contains(search_date))
+        logs = logs.where(Log.date.contains(search_date))
     if start_date and end_date:
         logs = Log.select().order_by(Log.date)
         logs = logs.where(Log.date.between(start_date, end_date))
@@ -244,7 +247,7 @@ def search_by_date():
                     new_choice = input("Enter number for date to search.  ")
                     new_choice = log_dict[int(new_choice)]
                     choice_date = datetime.datetime.strptime(new_choice, "%m/%d/%Y")
-                    find_logs(search_date=choice_date)
+                    find_logs(search_date=choice_date.date())
                 except ValueError:
                     print("That is not a valid date. Please try again")
                     choice = None
@@ -253,7 +256,7 @@ def search_by_date():
             try:
                 start_date_ = datetime.datetime.strptime(input("Enter Start Date MM/DD/YYYY: "), "%m/%d/%Y")
                 end_date_ = datetime.datetime.strptime(input("Enter End Date MM/DD/YYYY: "), "%m/%d/%Y")
-                find_logs(start_date=start_date_, end_date=end_date_)
+                find_logs(start_date=start_date_.date(), end_date=end_date_.date()+datetime.timedelta(days=1))
             except ValueError:
                 print("That is not a valid date. Please try again")
                 choice = None
@@ -287,8 +290,6 @@ def search_by_time_spent():
 
 def print_entry(logs):
     """Print the entries to the screen in a readable format"""
-    # print a report to the screen
-    # include date, title_of_task, time spent, employee, and general notes
     for log in logs:
         clear_screen()
         date = log.date.strftime('%A %B %d, %Y %I:%M%p')
@@ -301,6 +302,7 @@ def print_entry(logs):
         print('=' * len(date))
         print()
         print("N) for next log entry")
+        print("p) for previous log entry")
         print("d) to delete log entry")
         print("e) to edit log entry")
         print('q) return to main menu')
