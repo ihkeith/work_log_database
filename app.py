@@ -372,6 +372,10 @@ def menu_loop():
             if choice in menu:
                 clear_screen()
                 menu[choice]()
+            if choice == 'q':
+                clear_screen()
+                print(("*" * 17) + "\nWork Log Database\n" + ("*" * 17) + "\n")
+                print("Thank you using the Work Log Database. Have a great day!\n")
         except KeyboardInterrupt:
             print("\nNice try, but you can't quit that way!")
             input("Press enter to continue")
