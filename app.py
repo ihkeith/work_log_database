@@ -313,6 +313,9 @@ def print_entry(logs):
 
             next_action = input('\nAction:  ').lower().strip()
             if next_action == 'q':
+                clear_screen()
+                print(("*" * 17) + "\nWork Log Database\n" + ("*" * 17) + "\n")
+                print("Thank you using the Work Log Database. Have a great day!")
                 break
             elif next_action == 'd':
                 remove_log(log_list[index])
