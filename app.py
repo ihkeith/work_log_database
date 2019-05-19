@@ -321,12 +321,16 @@ def print_entry(logs):
                 remove_log(log_list[index])
             elif next_action == 'e':
                 edit_log(log_list[index])
+            elif next_action == 'p' and index == 0:
+                pass
             elif next_action == 'p' and index != 0:
                 index -= 1
                 continue
             else:
                 index += 1
         except IndexError:
+            print("No more records to view here.")
+            input("Press enter to return to the previous menu.")
             return False
 
 
@@ -382,5 +386,8 @@ def menu_loop():
 
 
 if __name__ == '__main__':
-    initialize()
-    menu_loop()
+    try:
+        initialize()
+        menu_loop()
+    except KeyboardInterrupt:
+        print("\nFine. Go ahead and leave. See if I care.")
