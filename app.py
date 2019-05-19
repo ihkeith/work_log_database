@@ -142,7 +142,7 @@ def find_logs(
             Log.task_title.contains(search_by_term) |
             Log.general_notes.contains(search_by_term))
     if name:
-        logs = logs.where(Log.employee_name.contains(name))
+        logs = logs.where(Log.employee_name == name)
     if spent:
         logs = logs.where(Log.time_spent == spent)
     if logs:
