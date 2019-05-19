@@ -76,27 +76,51 @@ def add_log():
 
 def edit_log(log):
     """Allows a user to edit a log entry"""
-    print("Log Entry Form")
+    print("\nLog Entry Form")
+    print("Press enter to keep the current value.\n")
 
     save = 'n'
     while save == 'n':
         try:
-            name = input("What is your name?  ")
+            name = input("What is your name?  {}  ".format(log.employee_name))
             if not name:
-                print("Please enter your name")
-                continue
-            title = input("What is the Task Title?  ")
+                name = log.employee_name
+                pass
+                # print("Please enter your name")
+                # continue
+            title = input("What is the Task Title?  {}  ".format(log.task_title))
             if not title:
-                print("Please enter a Title")
-                continue
-            spent_time = int(input("How much time did it take? Enter minutes in numbers only.  "))
+                title = log.task_title
+                pass
+                # print("Please enter a Title")
+                # continue
+            spent_time = input("How much time did it take? Enter minutes in numbers only.  {}  ".format(log.time_spent))
             if not spent_time:
-                print('Please enter time spent')
-                continue
-            date = datetime.datetime.strptime(input("Please enter new date/time in MM/DD/YYYY 00:00PM format  "), "%m/%d/%Y %I:%M%p")
-
-            print("Add your notes here. Press ctl+D when done.")
+                spent_time = log.time_spent
+                pass
+                # print('Please enter time spent')
+                # continue
+            else:
+                spent_time = int(spent_time)
+            date = input("Please enter new date/time in MM/DD/YYYY 00:00PM format  {}  ". format(log.date))
+            if not date:
+                date = log.date
+                pass
+            else:
+                date = datetime.datetime.strptime(date, "%m/%d/%Y %I:%M%p")
+            print("Current Notes: {}\nAdd your notes here. Press ctl+D when done or to accept previous entry.".format(log.general_notes))
             notes = sys.stdin.read().strip()
+            if not notes:
+                notes = log.general_notes
+
+            print("\n")
+            print(date.strftime('%A %B %d, %Y %I:%M%p'))
+            print("Name: {}".format(log.employee_name))
+            print("Task Title: {}".format(log.task_title))
+            print("Minutes Worked: {}".format(log.time_spent))
+            print("Notes: {}".format(log.general_notes))
+            print()
+
             save = input("Would you like to save this log? Y/n  ")
 
             if save.lower().strip() == 'y':
@@ -108,6 +132,8 @@ def edit_log(log):
                 log.save()
                 print("Saved successfully!")
             else:
+                print("\nOk, we won't save the edits.")
+                input("Press enter to go back to the unedited log.\n")
                 save = 'not saving pal'
         except ValueError:
             print("Please enter minutes as a number only. Ex. 42")
@@ -163,6 +189,9 @@ def search_by_name():
 
     if len(name_list) == 1:
         find_logs(start_date=None, end_date=None, search_by_term=None, name=search_name)
+    if not name_list:
+        print("There were no matches found.")
+        input("Press enter to go back to the previous menu.")
     else:
         print("Matches:\n")
 
