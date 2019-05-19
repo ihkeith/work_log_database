@@ -93,7 +93,7 @@ def edit_log(log):
             if not spent_time:
                 print('Please enter time spent')
                 continue
-            date = datetime.datetime.strptime(input("Please enter new date in MM/DD/YYYY 00:00PM format  "), "%m/%d/%Y %I:%M%p")
+            date = datetime.datetime.strptime(input("Please enter new date/time in MM/DD/YYYY 00:00PM format  "), "%m/%d/%Y %I:%M%p")
 
             print("Add your notes here. Press ctl+D when done.")
             notes = sys.stdin.read().strip()
@@ -118,6 +118,7 @@ def remove_log(log):
     """Allows a user to remove a log entry"""
     if input("Are you sure?  y/N  ").lower() == 'y':
         log.delete_instance()
+        clear_screen()
         print("Log deleted!")
 
 
@@ -319,6 +320,8 @@ def print_entry(logs):
                 break
             elif next_action == 'd':
                 remove_log(log_list[index])
+                input("Press enter to return to the previous menu.")
+                return False
             elif next_action == 'e':
                 edit_log(log_list[index])
             elif next_action == 'p' and index == 0:
@@ -346,13 +349,17 @@ def search_menu():
 
     while choice != 'q':
         clear_screen()
-        print("Enter 'q' to quit.\n")
+        print("Enter 'q' to return to the main menu.\n")
         for key, value in s_menu.items():
             print('{}) {}'.format(key, value.__doc__))
         choice = input("\nAction:  ").lower().strip()
         if choice in s_menu:
             clear_screen()
             s_menu[choice]()
+        else:
+            print("That is not a valid action. Please try again.")
+            input("Press enter to continue.")
+            continue
 
 
 menu = OrderedDict([
